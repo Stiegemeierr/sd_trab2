@@ -9,7 +9,7 @@ ENCODING = UTF-8
 all: compile
 
 compile:
-	$(JAVAC) -encoding $(ENCODING) -d $(BIN_DIR) -sourcepath $(SRC_DIR) src/CausalMulticast/*.java src/client/*.java src/*.java
+	$(JAVAC) -encoding $(ENCODING) -d $(BIN_DIR) -sourcepath $(SRC_DIR) src/CausalMulticast/*.java src/client/*.java
 
 run:
 	$(JAVA) -cp $(BIN_DIR) ClientApp $(IP) $(PORT)
