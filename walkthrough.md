@@ -1,9 +1,4 @@
 # Walkthrough — CausalMulticast Middleware
-
-## Projeto Concluído ✅
-
-Middleware Java para comunicação multicast com **ordenamento causal** sobre UDP unicast, desenvolvido para a disciplina ELC1018 — Sistemas Distribuídos.
-
 ---
 
 ## Arquivos do Projeto
@@ -14,7 +9,6 @@ Middleware Java para comunicação multicast com **ordenamento causal** sobre UD
 |---|---|---|
 | `ICausalMulticast.java` | 1 | Interface de callback `deliver(String msg)` |
 | `Message.java` | 1 | Serialização/desserialização (`senderIndex\|vc0,vc1,...\|payload`) |
-| `VectorClock.java` | 1 | Relógio vetorial com `canDeliver()` para ordenação causal |
 | `GroupConfig.java` | 1 | Leitura do `group.cfg` estático |
 | `MessageHandler.java` | 2 | Interface funcional `onReceive(byte[], int)` |
 | `UDPSender.java` | 2 | Envio de datagramas unicast |
@@ -30,15 +24,6 @@ Middleware Java para comunicação multicast com **ordenamento causal** sobre UD
 | `src/client/ClientApp.java` | 5 | Cliente interativo (menu terminal) |
 | `Makefile` | 5 | Build, execução, Javadoc, testes |
 | `group.cfg` | 1 | Config de grupo (3 membros localhost) |
-
-### Testes
-
-| Arquivo | Valida |
-|---|---|
-| `TestModulo1.java` | Serialização, VectorClock.canDeliver, GroupConfig |
-| `TestModulo2.java` | Envio/recepção UDP loopback |
-| `TestModulo3.java` | Entrega causal com 3 processos in-JVM |
-| `TestModulo4.java` | Controle interativo de atraso |
 
 ---
 
@@ -60,19 +45,6 @@ make run2
 # Terminal 3:
 make run3
 ```
-
-### Gerar Javadoc
-```bash
-make javadoc
-```
-
-### Rodar testes
-```bash
-make test1   # Módulo 1
-make test2   # Módulo 2
-make test3   # Módulo 3
-```
-
 ---
 
 ## Decisões de Engenharia (D1–D18)
@@ -99,21 +71,3 @@ make test3   # Módulo 3
 | D18 | Makefile com `rm -rf` multiplataforma |
 
 ---
-
-## Fluxo de Desenvolvimento
-
-```mermaid
-graph LR
-    M1["Módulo 1\nNúcleo"] --> M2["Módulo 2\nUDP"]
-    M2 --> M3["Módulo 3\nCausal + GC"]
-    M3 --> M4["Módulo 4\nInterativo"]
-    M4 --> M5["Módulo 5\nCliente + Build"]
-    
-    style M1 fill:#4caf50,color:#fff
-    style M2 fill:#4caf50,color:#fff
-    style M3 fill:#4caf50,color:#fff
-    style M4 fill:#4caf50,color:#fff
-    style M5 fill:#4caf50,color:#fff
-```
-
-Todos os 5 módulos concluídos em uma sessão. Nenhuma pendência técnica aberta.
