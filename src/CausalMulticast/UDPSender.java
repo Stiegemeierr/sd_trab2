@@ -10,6 +10,10 @@ import java.net.InetAddress;
  */
 public class UDPSender {
     private final DatagramSocket socket;
+
+    /**
+     * Tamanho máximo permitido para um datagrama UDP.
+     */
     public static final int MAX_DATAGRAM_SIZE = 65507;
 
     /**

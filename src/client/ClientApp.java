@@ -10,6 +10,12 @@ import java.util.Scanner;
 public class ClientApp implements ICausalMulticast {
 
     /**
+     * Construtor padrão.
+     */
+    public ClientApp() {
+    }
+
+    /**
      * Callback chamado pelo middleware quando uma mensagem está pronta para entrega.
      *
      * @param msg conteúdo da mensagem recebida
@@ -75,24 +81,28 @@ public class ClientApp implements ICausalMulticast {
                 String txt = scanner.nextLine().trim();
                 cm.mcsend(txt, clientApp);
             } else if (opt == 2) {
+                java.util.List<String> descList = new java.util.ArrayList<>();
                 synchronized (cm.getLock()) {
-                    if (cm.getDelayedQueueSize() == 0) {
-                        System.out.println("Nenhuma mensagem atrasada.");
-                    } else {
-                        System.out.println("Mensagens atrasadas:");
-                        for (int i = 0; i < cm.getDelayedQueueSize(); i++) {
-                            System.out.println("[" + i + "] " + cm.getDelayedQueue().get(i).getDescription());
-                        }
-                        System.out.print("Índice para liberar (-1 para cancelar): ");
-                        try {
-                            int idx = Integer.parseInt(scanner.nextLine().trim());
-                            if (idx == -1) {
-                                continue;
-                            }
+                    for (int i = 0; i < cm.getDelayedQueueSize(); i++) {
+                        descList.add(cm.getDelayedQueue().get(i).getDescription());
+                    }
+                }
+                
+                if (descList.isEmpty()) {
+                    System.out.println("Nenhuma mensagem atrasada.");
+                } else {
+                    System.out.println("Mensagens atrasadas:");
+                    for (int i = 0; i < descList.size(); i++) {
+                        System.out.println("[" + i + "] " + descList.get(i));
+                    }
+                    System.out.print("Índice para liberar (-1 para cancelar): ");
+                    try {
+                        int idx = Integer.parseInt(scanner.nextLine().trim());
+                        if (idx != -1) {
                             cm.releaseDelayed(idx);
-                        } catch (NumberFormatException e) {
-                            System.out.println("Índice inválido.");
                         }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Índice inválido.");
                     }
                 }
             } else if (opt == 3) {

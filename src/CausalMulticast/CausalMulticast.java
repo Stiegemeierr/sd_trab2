@@ -142,6 +142,16 @@ public class CausalMulticast {
      * @param cliente referência para a aplicação cliente
      */
     public void mcsend(String msg, ICausalMulticast cliente) {
+        boolean[] sendNow = new boolean[groupConfig.size()];
+        for (int j = 0; j < groupConfig.size(); j++) {
+            if (j != selfIndex) {
+                GroupConfig.Member member = groupConfig.getMember(j);
+                System.out.print("Enviar para Processo " + j + " (" + member.getIp() + ":" + member.getPort() + ")? [S/n]: ");
+                String resp = scanner.nextLine().trim();
+                sendNow[j] = !resp.equalsIgnoreCase("n");
+            }
+        }
+
         synchronized (lock) {
             vectorClock[selfIndex]++;
             Message m = new Message(selfIndex, Arrays.copyOf(vectorClock, vectorClock.length), msg);
@@ -154,10 +164,7 @@ public class CausalMulticast {
                     try {
                         InetAddress addr = InetAddress.getByName(member.getIp());
                         
-                        System.out.print("Enviar para Processo " + j + " (" + member.getIp() + ":" + member.getPort() + ")? [S/n]: ");
-                        String resp = scanner.nextLine().trim();
-                        
-                        if (resp.equalsIgnoreCase("n")) {
+                        if (!sendNow[j]) {
                             String description = "Para P" + j + ": " + m.toString();
                             DelayedEntry entry = new DelayedEntry(data, addr, member.getPort(), j, description);
                             delayedQueue.add(entry);
@@ -261,7 +268,7 @@ public class CausalMulticast {
      *
      * @return lista com as mensagens atrasadas
      */
-    public List<DelayedEntry> getDelayedQueue() { return delayedQueue; }
+    public List<DelayedEntry> getDelayedQueue() { return new ArrayList<>(delayedQueue); }
     
     /**
      * Retorna o tamanho da fila de mensagens atrasadas.
@@ -275,14 +282,20 @@ public class CausalMulticast {
      *
      * @return array de ints
      */
-    public int[] getVectorClock() { return vectorClock; }
+    public int[] getVectorClock() { return vectorClock.clone(); }
     
     /**
      * Retorna a matriz de estabilidade.
      *
      * @return matriz de inteiros representando o conhecimento das mensagens recebidas por cada processo
      */
-    public int[][] getStabilityMatrix() { return stabilityMatrix; }
+    public int[][] getStabilityMatrix() {
+        int[][] copy = new int[stabilityMatrix.length][];
+        for (int i = 0; i < stabilityMatrix.length; i++) {
+            copy[i] = stabilityMatrix[i].clone();
+        }
+        return copy;
+    }
     
     /**
      * Retorna o buffer de mensagens recebidas pendentes.
