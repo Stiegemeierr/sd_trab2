@@ -1,9 +1,9 @@
-# Walkthrough — CausalMulticast Middleware
+# README CausalMulticast Middleware
 ---
 
 ## Arquivos do Projeto
 
-### Middleware (`src/CausalMulticast/` — 10 arquivos)
+### Middleware (`src/CausalMulticast/`)
 
 | Arquivo | Módulo | Função |
 |---|---|---|
@@ -45,29 +45,4 @@ make run2
 # Terminal 3:
 make run3
 ```
----
-
-## Decisões de Engenharia (D1–D18)
-
-| # | Decisão |
-|---|---|
-| D1 | Java 17 LTS |
-| D2 | Build com `javac` + `Makefile` |
-| D3 | Serialização por string delimitada (`\|`) |
-| D4 | Grupo N arbitrário |
-| D5 | Config via `group.cfg` |
-| D6 | Javadoc |
-| D7 | Zero bibliotecas externas |
-| D8 | Grupo estático (flexibilização do professor) |
-| D9 | `synchronized` para thread safety |
-| D10 | Parsing via `indexOf`/`substring` (sem Regex) |
-| D11 | `-encoding UTF-8` obrigatório no `javac` |
-| D12 | `UDPReceiver.stop()` não fecha socket |
-| D13 | Cópia defensiva no `UDPReceiver` |
-| D14 | `getLock()` exposto para composição |
-| D15 | GC via `removeAll` atômico |
-| D16 | Scanner dentro de `synchronized` (intencional) |
-| D17 | `ClientApp` em default package |
-| D18 | Makefile com `rm -rf` multiplataforma |
-
 ---
