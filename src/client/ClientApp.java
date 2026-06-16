@@ -4,13 +4,26 @@ import CausalMulticast.ICausalMulticast;
 
 import java.util.Scanner;
 
+/**
+ * Aplicação cliente que utiliza o middleware CausalMulticast para troca de mensagens.
+ */
 public class ClientApp implements ICausalMulticast {
 
+    /**
+     * Callback chamado pelo middleware quando uma mensagem está pronta para entrega.
+     *
+     * @param msg conteúdo da mensagem recebida
+     */
     @Override
     public void deliver(String msg) {
         System.out.println(">> [ENTREGUE] " + msg);
     }
 
+    /**
+     * Ponto de entrada da aplicação cliente.
+     *
+     * @param args argumentos de linha de comando (ip e porta do processo)
+     */
     public static void main(String[] args) {
         if (args.length < 2) {
             System.err.println("Uso: java ClientApp <ip> <porta>");

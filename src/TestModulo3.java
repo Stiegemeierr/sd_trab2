@@ -5,17 +5,33 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Classe de teste para o Módulo 3 (Entrega Causal de Mensagens).
+ */
 public class TestModulo3 {
 
+    /**
+     * Cliente de processo simulado para testes.
+     */
     static class ProcessClient implements ICausalMulticast {
         private final int id;
         public final List<String> delivered = Collections.synchronizedList(new ArrayList<>());
         public CausalMulticast cm;
 
+        /**
+         * Constrói o cliente do processo.
+         *
+         * @param id identificador do processo
+         */
         public ProcessClient(int id) {
             this.id = id;
         }
 
+        /**
+         * Callback de entrega de mensagem do middleware.
+         *
+         * @param msg mensagem recebida
+         */
         @Override
         public void deliver(String msg) {
             delivered.add(msg);
@@ -23,6 +39,12 @@ public class TestModulo3 {
         }
     }
 
+    /**
+     * Ponto de entrada do teste do Módulo 3.
+     *
+     * @param args argumentos de linha de comando
+     * @throws InterruptedException se a thread for interrompida durante o sleep
+     */
     public static void main(String[] args) throws InterruptedException {
         System.out.println("Iniciando TestModulo3...");
 
@@ -30,10 +52,30 @@ public class TestModulo3 {
         ProcessClient p1 = new ProcessClient(1);
         ProcessClient p2 = new ProcessClient(2);
 
+        // Simula entrada do usuário para manter o CausalMulticast 100% interativo sem travar o teste
+        System.setIn(new java.io.InputStream() {
+            private int pos = 0;
+            private final byte[] data = "S\n".getBytes();
+            @Override
+            public int read() {
+                int b = data[pos];
+                pos = (pos + 1) % data.length;
+                return b;
+            }
+            @Override
+            public int read(byte[] b, int off, int len) {
+                for(int i=0; i<len; i++) {
+                    b[off+i] = data[pos];
+                    pos = (pos + 1) % data.length;
+                }
+                return len;
+            }
+        });
+
         // 3. Criar instâncias
-        p0.cm = new CausalMulticast("127.0.0.1", 6001, p0);
-        p1.cm = new CausalMulticast("127.0.0.1", 6002, p1);
-        p2.cm = new CausalMulticast("127.0.0.1", 6003, p2);
+        p0.cm = new CausalMulticast("127.0.0.1", 5001, p0);
+        p1.cm = new CausalMulticast("127.0.0.1", 5002, p1);
+        p2.cm = new CausalMulticast("127.0.0.1", 5003, p2);
 
         // 4. Aguardar inicialização
         Thread.sleep(500);

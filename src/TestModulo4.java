@@ -4,13 +4,26 @@ import CausalMulticast.ICausalMulticast;
 
 import java.util.Scanner;
 
+/**
+ * Classe de teste interativo para o Módulo 4 (Atraso de Mensagens e Estado).
+ */
 public class TestModulo4 implements ICausalMulticast {
     
+    /**
+     * Callback de entrega de mensagem do middleware.
+     *
+     * @param msg mensagem recebida
+     */
     @Override
     public void deliver(String msg) {
         System.out.println("\n[TestModulo4] Entregue (callback disparado): " + msg);
     }
 
+    /**
+     * Ponto de entrada do teste do Módulo 4.
+     *
+     * @param args argumentos de linha de comando
+     */
     public static void main(String[] args) {
         System.out.println("Iniciando TestModulo4...");
         

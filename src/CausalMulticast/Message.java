@@ -130,4 +130,34 @@ public class Message {
     public String toString() {
         return String.format("[P%d | VC=%s | \"%s\"]", senderIndex, Arrays.toString(timestamp).replaceAll(" ", ""), payload);
     }
+
+    /**
+     * Verifica se uma mensagem pode ser entregue causalmente.
+     *
+     * @param clock relógio atual
+     * @param msgTimestamp vetor de relógio da mensagem recebida
+     * @param senderIndex  índice do processo remetente
+     * @return true se puder entregar, false caso contrário
+     */
+    public static boolean canDeliver(int[] clock, int[] msgTimestamp, int senderIndex) {
+        if (msgTimestamp == null || msgTimestamp.length != clock.length) {
+            return false;
+        }
+        if (senderIndex < 0 || senderIndex >= clock.length) {
+            return false;
+        }
+
+        if (msgTimestamp[senderIndex] != clock[senderIndex] + 1) {
+            return false;
+        }
+
+        for (int k = 0; k < clock.length; k++) {
+            if (k != senderIndex) {
+                if (msgTimestamp[k] > clock[k]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }

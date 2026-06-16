@@ -56,6 +56,11 @@ public class GroupConfig {
 
     private final List<Member> members;
 
+    /**
+     * Construtor privado utilizado pelo método load.
+     *
+     * @param members lista de membros do grupo
+     */
     private GroupConfig(List<Member> members) {
         this.members = Collections.unmodifiableList(members);
     }

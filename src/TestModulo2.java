@@ -6,7 +6,15 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Classe de teste para o Módulo 2 (Comunicação UDP).
+ */
 public class TestModulo2 {
+    /**
+     * Ponto de entrada do teste do Módulo 2.
+     *
+     * @param args argumentos de linha de comando
+     */
     public static void main(String[] args) {
         try {
             System.out.println("Iniciando TestModulo2...");

@@ -1,8 +1,15 @@
 import CausalMulticast.GroupConfig;
 import CausalMulticast.Message;
-import CausalMulticast.VectorClock;
 
+/**
+ * Classe de teste para o Módulo 1 (Message, VectorClock e GroupConfig).
+ */
 public class TestModulo1 {
+    /**
+     * Ponto de entrada do teste do Módulo 1.
+     *
+     * @param args argumentos de linha de comando
+     */
     public static void main(String[] args) {
         try {
             System.out.println(">>> Testando Message...");
@@ -23,22 +30,22 @@ public class TestModulo1 {
             }
             System.out.println("[OK] Message serializa e desserializa corretamente.");
 
-            System.out.println(">>> Testando VectorClock...");
-            VectorClock vc = new VectorClock(3);
-            vc.set(0, 2);
-            vc.set(1, 0);
-            vc.set(2, 1); // VC local = [2, 0, 1]
+            System.out.println(">>> Testando Message.canDeliver...");
+            int[] vc = new int[3];
+            vc[0] = 2;
+            vc[1] = 0;
+            vc[2] = 1; // VC local = [2, 0, 1]
             
-            if (!vc.canDeliver(new int[]{2, 1, 1}, 1)) {
+            if (!Message.canDeliver(vc, new int[]{2, 1, 1}, 1)) {
                 throw new Exception("Falha canDeliver: deveria ser TRUE para [2, 1, 1] do sender 1");
             }
-            if (vc.canDeliver(new int[]{2, 2, 1}, 1)) {
+            if (Message.canDeliver(vc, new int[]{2, 2, 1}, 1)) {
                 throw new Exception("Falha canDeliver: deveria ser FALSE para [2, 2, 1] do sender 1");
             }
-            if (vc.canDeliver(new int[]{3, 1, 1}, 1)) {
+            if (Message.canDeliver(vc, new int[]{3, 1, 1}, 1)) {
                 throw new Exception("Falha canDeliver: deveria ser FALSE para [3, 1, 1] do sender 1");
             }
-            System.out.println("[OK] VectorClock.canDeliver funciona corretamente.");
+            System.out.println("[OK] Message.canDeliver funciona corretamente.");
 
             System.out.println(">>> Testando GroupConfig...");
             GroupConfig gc = GroupConfig.load("group.cfg");

@@ -15,6 +15,9 @@ import java.util.Scanner;
  */
 public class CausalMulticast {
 
+    /**
+     * Representa uma entrada atrasada na fila de envio de mensagens.
+     */
     public static class DelayedEntry {
         private final byte[] datagram;
         private final InetAddress destAddr;
@@ -22,6 +25,15 @@ public class CausalMulticast {
         private final int destIndex;
         private final String description;
 
+        /**
+         * Constrói uma nova entrada atrasada.
+         *
+         * @param datagram dados do datagrama a serem enviados
+         * @param destAddr endereço de destino
+         * @param destPort porta de destino
+         * @param destIndex índice do processo de destino
+         * @param description descrição da mensagem
+         */
         public DelayedEntry(byte[] datagram, InetAddress destAddr, int destPort, int destIndex, String description) {
             this.datagram = datagram;
             this.destAddr = destAddr;
@@ -30,17 +42,46 @@ public class CausalMulticast {
             this.description = description;
         }
 
+        /**
+         * Retorna os dados do datagrama.
+         *
+         * @return array de bytes contendo o datagrama
+         */
         public byte[] getDatagram() { return datagram; }
+        
+        /**
+         * Retorna o endereço de destino.
+         *
+         * @return InetAddress de destino
+         */
         public InetAddress getDestAddr() { return destAddr; }
+        
+        /**
+         * Retorna a porta de destino.
+         *
+         * @return número da porta de destino
+         */
         public int getDestPort() { return destPort; }
+        
+        /**
+         * Retorna o índice do processo de destino.
+         *
+         * @return índice do processo
+         */
         public int getDestIndex() { return destIndex; }
+        
+        /**
+         * Retorna a descrição da mensagem.
+         *
+         * @return string contendo a descrição
+         */
         public String getDescription() { return description; }
     }
 
     private final ICausalMulticast client;
     private final GroupConfig groupConfig;
     private final int selfIndex;
-    private final VectorClock vectorClock;
+    private final int[] vectorClock;
     private final int[][] stabilityMatrix;
     private final MessageBuffer messageBuffer;
     private final UDPSender udpSender;
@@ -54,6 +95,13 @@ public class CausalMulticast {
     private final DisplayManager displayManager;
     private final Scanner scanner;
 
+    /**
+     * Inicializa o middleware CausalMulticast para um processo específico.
+     *
+     * @param ip endereço IP local do processo
+     * @param port porta local do processo
+     * @param client referência para a aplicação cliente que receberá os callbacks
+     */
     public CausalMulticast(String ip, Integer port, ICausalMulticast client) {
         try {
             this.client = client;
@@ -65,7 +113,7 @@ public class CausalMulticast {
             }
             
             int N = groupConfig.size();
-            this.vectorClock = new VectorClock(N);
+            this.vectorClock = new int[N];
             this.stabilityMatrix = new int[N][N];
             this.messageBuffer = new MessageBuffer();
             
@@ -87,10 +135,16 @@ public class CausalMulticast {
         }
     }
 
+    /**
+     * Envia uma mensagem em multicast (Causal Multicast) para todos os membros do grupo.
+     *
+     * @param msg conteúdo da mensagem a ser enviada
+     * @param cliente referência para a aplicação cliente
+     */
     public void mcsend(String msg, ICausalMulticast cliente) {
         synchronized (lock) {
-            vectorClock.increment(selfIndex);
-            Message m = new Message(selfIndex, vectorClock.copy(), msg);
+            vectorClock[selfIndex]++;
+            Message m = new Message(selfIndex, Arrays.copyOf(vectorClock, vectorClock.length), msg);
             String serialized = m.serialize();
             byte[] data = serialized.getBytes(StandardCharsets.UTF_8);
 
@@ -117,13 +171,19 @@ public class CausalMulticast {
                 }
             }
 
-            stabilityMatrix[selfIndex] = vectorClock.copy();
+            stabilityMatrix[selfIndex] = Arrays.copyOf(vectorClock, vectorClock.length);
             cliente.deliver(msg);
             garbageCollect();
             displayManager.printState("ENVIO", vectorClock, stabilityMatrix, messageBuffer, delayedQueue);
         }
     }
 
+    /**
+     * Trata o recebimento de uma nova mensagem UDP, decodifica e verifica as condições de entrega.
+     *
+     * @param data dados da mensagem recebida
+     * @param length tamanho dos dados recebidos
+     */
     private void handleReceive(byte[] data, int length) {
         synchronized (lock) {
             String raw = new String(data, 0, length, StandardCharsets.UTF_8);
@@ -147,8 +207,8 @@ public class CausalMulticast {
                 delivered = false;
                 List<Message> deliverable = messageBuffer.getDeliverableMessages(vectorClock);
                 for (Message dm : deliverable) {
-                    vectorClock.set(dm.getSenderIndex(), dm.getTimestamp()[dm.getSenderIndex()]);
-                    stabilityMatrix[selfIndex] = vectorClock.copy();
+                    vectorClock[dm.getSenderIndex()] = dm.getTimestamp()[dm.getSenderIndex()];
+                    stabilityMatrix[selfIndex] = Arrays.copyOf(vectorClock, vectorClock.length);
                     client.deliver(dm.getPayload());
                     messageBuffer.remove(dm);
                     delivered = true;
@@ -160,6 +220,9 @@ public class CausalMulticast {
         }
     }
 
+    /**
+     * Realiza a coleta de lixo, descartando mensagens que já se tornaram estáveis em todos os processos.
+     */
     private void garbageCollect() {
         List<Message> stable = messageBuffer.getStableMessages(stabilityMatrix);
         if (!stable.isEmpty()) {
@@ -170,6 +233,11 @@ public class CausalMulticast {
         }
     }
 
+    /**
+     * Libera o envio de uma mensagem que estava retida na fila de atraso.
+     *
+     * @param index índice da mensagem na fila de mensagens atrasadas
+     */
     public void releaseDelayed(int index) {
         synchronized (lock) {
             if (index < 0 || index >= delayedQueue.size()) {
@@ -188,13 +256,66 @@ public class CausalMulticast {
         }
     }
 
+    /**
+     * Retorna a lista de mensagens atrasadas.
+     *
+     * @return lista com as mensagens atrasadas
+     */
     public List<DelayedEntry> getDelayedQueue() { return delayedQueue; }
+    
+    /**
+     * Retorna o tamanho da fila de mensagens atrasadas.
+     *
+     * @return número de mensagens atrasadas na fila
+     */
     public int getDelayedQueueSize() { return delayedQueue.size(); }
-    public VectorClock getVectorClock() { return vectorClock; }
+    
+    /**
+     * Retorna o relógio vetorial local.
+     *
+     * @return array de ints
+     */
+    public int[] getVectorClock() { return vectorClock; }
+    
+    /**
+     * Retorna a matriz de estabilidade.
+     *
+     * @return matriz de inteiros representando o conhecimento das mensagens recebidas por cada processo
+     */
     public int[][] getStabilityMatrix() { return stabilityMatrix; }
+    
+    /**
+     * Retorna o buffer de mensagens recebidas pendentes.
+     *
+     * @return instância de MessageBuffer
+     */
     public MessageBuffer getMessageBuffer() { return messageBuffer; }
+    
+    /**
+     * Retorna a configuração do grupo.
+     *
+     * @return instância de GroupConfig contendo as definições do grupo
+     */
     public GroupConfig getGroupConfig() { return groupConfig; }
+    
+    /**
+     * Retorna o índice próprio no grupo.
+     *
+     * @return inteiro representando o índice deste processo
+     */
     public int getSelfIndex() { return selfIndex; }
+    
+    /**
+     * Retorna o objeto de sincronização interna.
+     *
+     * @return o objeto usado como lock
+     */
     public Object getLock() { return lock; }
+    
+    /**
+     * Retorna o objeto responsável por enviar datagramas UDP.
+     *
+     * @return instância de UDPSender
+     */
     public UDPSender getUdpSender() { return udpSender; }
 }
